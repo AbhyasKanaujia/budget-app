@@ -30,14 +30,54 @@ const User = mongoose.model("User", {
   },
 });
 
-const user = new User({
-  email: "example@gmail.com",
+// const user = new User({
+//   email: "example@gmail.com",
+// });
+
+// user
+//   .save()
+//   .then(() => {
+//     console.log(user);
+//   })
+//   .catch((error) => {
+//     console.log(error.message);
+//   });
+
+const Transaction = mongoose.model("Transaction", {
+  description: {
+    type: String,
+    trim: true,
+  },
+  amount: {
+    type: Number,
+    required: [true, "Amount is required"],
+  },
+  category: {
+    type: String,
+    default: "Other",
+    trim: true,
+  },
+  transactionType: {
+    type: String,
+    enum: ["income", "expense"],
+    default: "expense",
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-user
+const transaction = new Transaction({
+  description: "Salary",
+  amount: 5000,
+  transactionType: "income",
+});
+
+transaction
   .save()
   .then(() => {
-    console.log(user);
+    console.log(transaction);
   })
   .catch((error) => {
     console.log(error.message);
