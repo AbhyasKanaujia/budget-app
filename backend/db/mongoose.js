@@ -11,9 +11,28 @@ const connectDB = async () => {
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
-    process.exit(1);
   }
 };
+
+process.on("SIGINT", async () => {
+  try {
+    await mongoose.connection.close();
+    console.log("MongoDB connection closed");
+    process.exit(0);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+  }
+});
+
+process.on("SIGTERM", async () => {
+  try {
+    await mongoose.connection.close();
+    console.log("MongoDB connection closed");
+    process.exit(0);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+  }
+});
 
 connectDB();
 
@@ -28,20 +47,31 @@ const User = mongoose.model("User", {
       message: (props) => `${props.value} is not a valid email address`,
     },
   },
+  password: {
+    type: String,
+    required: [true, "Password is required"],
+    trim: true,
+    minlength: [8, "Password must be at least 8 characters long"],
+    validate: {
+      validator: (value) => !value.toLowerCase().includes("password"),
+      message: "Password cannot contain the word password",
+    },
+  },
 });
 
-// const user = new User({
-//   email: "example@gmail.com",
-// });
+const user = new User({
+  email: "example@gmail.com",
+  password: "12345678",
+});
 
-// user
-//   .save()
-//   .then(() => {
-//     console.log(user);
-//   })
-//   .catch((error) => {
-//     console.log(error.message);
-//   });
+user
+  .save()
+  .then(() => {
+    console.log(user);
+  })
+  .catch((error) => {
+    console.log(error.message);
+  });
 
 const Transaction = mongoose.model("Transaction", {
   description: {
@@ -59,7 +89,10 @@ const Transaction = mongoose.model("Transaction", {
   },
   transactionType: {
     type: String,
-    enum: ["income", "expense"],
+    enum: {
+      values: ["income", "expense"],
+      message: "{VALUE} is not supported, please select income or expense",
+    },
     default: "expense",
   },
   createdAt: {
