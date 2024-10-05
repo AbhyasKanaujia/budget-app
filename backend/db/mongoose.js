@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const validator = require("validator");
 
 const connectDB = async () => {
   try {
@@ -34,45 +33,6 @@ process.on("SIGTERM", async () => {
   }
 });
 
-connectDB();
-
-const User = mongoose.model("User", {
-  email: {
-    type: String,
-    required: [true, "Email is required"],
-    trim: true,
-    lowercase: true,
-    validate: {
-      validator: (value) => validator.isEmail(value),
-      message: (props) => `${props.value} is not a valid email address`,
-    },
-  },
-  password: {
-    type: String,
-    required: [true, "Password is required"],
-    trim: true,
-    minlength: [8, "Password must be at least 8 characters long"],
-    validate: {
-      validator: (value) => !value.toLowerCase().includes("password"),
-      message: "Password cannot contain the word password",
-    },
-  },
-});
-
-const user = new User({
-  email: "example@gmail.com",
-  password: "12345678",
-});
-
-user
-  .save()
-  .then(() => {
-    console.log(user);
-  })
-  .catch((error) => {
-    console.log(error.message);
-  });
-
 const Transaction = mongoose.model("Transaction", {
   description: {
     type: String,
@@ -100,20 +60,5 @@ const Transaction = mongoose.model("Transaction", {
     default: Date.now,
   },
 });
-
-const transaction = new Transaction({
-  description: "Salary",
-  amount: 5000,
-  transactionType: "income",
-});
-
-transaction
-  .save()
-  .then(() => {
-    console.log(transaction);
-  })
-  .catch((error) => {
-    console.log(error.message);
-  });
 
 module.exports = connectDB;
