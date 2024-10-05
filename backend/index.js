@@ -1,6 +1,7 @@
 const express = require("express");
 const connectDB = require("./db/mongoose");
 const User = require("./models/user");
+const Transaction = require("./models/transaction");
 
 const app = express();
 connectDB();
@@ -14,6 +15,18 @@ app.post("/users", (req, res) => {
     .save()
     .then(() => {
       res.status(201).send(user);
+    })
+    .catch((error) => {
+      res.status(400).send(error);
+    });
+});
+
+app.post("/transactions", (req, res) => {
+  const transaction = new Transaction(req.body);
+  transaction
+    .save()
+    .then(() => {
+      res.status(201).send(transaction);
     })
     .catch((error) => {
       res.status(400).send(error);
