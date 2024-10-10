@@ -61,16 +61,11 @@ router.patch("/transactions/:id", async (req, res) => {
         .status(400)
         .send({ error: `Invalid updates. Cannot update: ${invalidUpdates}` });
 
-    const transaction = await Transaction.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-
+    const transaction = await Transaction.findById(req.params.id);
     if (!transaction) res.status(404).send({ error: "Transaction not found" });
+
+    updates.forEach((update) => (transaction[update] = req.body[update]));
+    await transaction.save();
 
     res.send(transaction);
   } catch (error) {
