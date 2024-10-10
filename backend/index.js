@@ -93,6 +93,19 @@ app.patch("/users/:id", async (req, res) => {
   }
 });
 
+app.delete("/users/:id", async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) res.status(404).send({ error: "User not found" });
+    res.send(user);
+  } catch (error) {
+    console.log(error);
+    if (error.name === "CastError")
+      return res.status(404).send({ error: "User not found" });
+    else res.status(500).send({ error: "Internal server error" });
+  }
+});
+
 app.post("/transactions", async (req, res) => {
   try {
     const transaction = new Transaction(req.body);
@@ -174,6 +187,19 @@ app.patch("/transactions/:id", async (req, res) => {
       }));
       return res.status(400).send({ errors: errors });
     } else res.status(500).send({ error: "Internal server error" });
+  }
+});
+
+app.delete("/transactions/:id", async (req, res) => {
+  try {
+    const transaction = await Transaction.findByIdAndDelete(req.params.id);
+    if (!transaction)
+      return res.status(404).send({ error: "Transaction not found" });
+    res.send(transaction);
+  } catch (error) {
+    if (error.name === "CastError")
+      res.status(404).send({ error: "Transaction not found" });
+    else res.status(500).send({ error: "Internal server error" });
   }
 });
 
