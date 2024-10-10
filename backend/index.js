@@ -54,6 +54,45 @@ app.get("/users/:id", async (req, res) => {
   }
 });
 
+app.patch("/users/:id", async (req, res) => {
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ["email", "password"];
+  const invalidUpdates = updates.filter(
+    (update) => !allowedUpdates.includes(update)
+  );
+
+  console.log("updates: ", updates);
+  console.log("allowedUpdates: ", allowedUpdates);
+  console.log("invalidUpdates: ", invalidUpdates);
+
+  if (invalidUpdates.length > 0)
+    return res
+      .status(400)
+      .send({ error: `Invalid updates, cannot update: ${invalidUpdates}` });
+
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    console.log(user);
+
+    if (!user) return res.status(404).send({ error: "User not found" });
+
+    res.send(user);
+  } catch (error) {
+    if (error.name === "CastError")
+      return res.status(404).send({ error: "User not found" });
+    else if (error.name === "ValidationError") {
+      const errors = Object.keys(error.errors).map((field) => ({
+        field: field,
+        message: error.errors[field].message,
+      }));
+      return res.status(400).send({ errors: errors });
+    } else res.status(500).send({ error: "Internal server error" });
+  }
+});
+
 app.post("/transactions", async (req, res) => {
   try {
     const transaction = new Transaction(req.body);
@@ -90,6 +129,51 @@ app.get("/transactions/:id", async (req, res) => {
     if (error.name === "CastError")
       return res.status(404).send({ error: "Transaction not found" });
     res.status(500).send({ error: "Internal server error" });
+  }
+});
+
+app.patch("/transactions/:id", async (req, res) => {
+  try {
+    const updates = Object.keys(req.body);
+    const allowedUpdates = [
+      "description",
+      "amount",
+      "category",
+      "transactionType",
+      "createdAt",
+    ];
+    const invalidUpdates = updates.filter(
+      (update) => !allowedUpdates.includes(update)
+    );
+
+    if (invalidUpdates.length > 0)
+      return res
+        .status(400)
+        .send({ error: `Invalid updates. Cannot update: ${invalidUpdates}` });
+
+    const transaction = await Transaction.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!transaction) res.status(404).send({ error: "Transaction not found" });
+
+    res.send(transaction);
+  } catch (error) {
+    console.log(error);
+    if (error.name === "CastError")
+      return res.status(404).send({ error: "Transaction not found" });
+    else if (error.name === "ValidationError") {
+      const errors = Object.keys(error.errors).map((field) => ({
+        field: field,
+        message: error.errors[field].message,
+      }));
+      return res.status(400).send({ errors: errors });
+    } else res.status(500).send({ error: "Internal server error" });
   }
 });
 
