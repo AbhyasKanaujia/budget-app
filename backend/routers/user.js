@@ -12,7 +12,8 @@ router.post("/users", async (req, res) => {
     }
     const user = new User(req.body);
     await user.save();
-    res.status(201).send(user);
+    const token = user.generateAuthToken();
+    res.status(201).send({ user, token });
   } catch (error) {
     if (error.name === "ValidationError") {
       const errors = Object.keys(error.errors).map((field) => ({
@@ -34,9 +35,11 @@ router.post("/users/login", async (req, res) => {
 
   try {
     const user = await User.findByCredentials(email, password);
-
-    res.send(user);
+    const token = user.generateAuthToken();
+    res.send({ user, token });
   } catch (error) {
+    console.log(error);
+
     res.status(401).send({ error: "Unable to login" });
   }
 });

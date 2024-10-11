@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const userSchema = mongoose.Schema({
   email: {
@@ -24,6 +25,14 @@ const userSchema = mongoose.Schema({
       message: "Password cannot contain the word password",
     },
   },
+  tokens: [
+    {
+      token: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
 });
 
 userSchema.statics.findByCredentials = async (email, password) => {
@@ -36,6 +45,16 @@ userSchema.statics.findByCredentials = async (email, password) => {
   }
 
   return user;
+};
+
+userSchema.methods.generateAuthToken = function () {
+  const user = this;
+  const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES,
+  });
+
+  user.tokens.push({ token });
+  return token;
 };
 
 // Hash the pain text password before saving
