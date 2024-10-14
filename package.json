@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node ./backend/index.js",
-    "dev": "nodemon --env-file .env ./backend/index.js"
+    "dev": "NODE_ENV=development nodemon --env-file .env ./backend/index.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +15,7 @@
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.6.4",
+    "morgan": "^1.10.0",
     "validator": "^13.12.0"
   },
   "devDependencies": {
