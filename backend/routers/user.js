@@ -13,7 +13,7 @@ router.post("/users", async (req, res) => {
         .send({ error: "An account with given email ID already exists" });
     }
     const user = new User(req.body);
-    const token = user.generateAuthToken();
+    const token = await user.generateAuthToken();
     res.status(201).send({ user, token });
   } catch (error) {
     if (error.name === "ValidationError") {
@@ -37,7 +37,7 @@ router.post("/users/login", async (req, res) => {
 
   try {
     const user = await User.findByCredentials(email, password);
-    const token = user.generateAuthToken();
+    const token = await user.generateAuthToken();
     res.send({ user, token });
   } catch (error) {
     console.log(error);
@@ -80,21 +80,7 @@ router.post("/users/logoutAll", auth, async (req, res) => {
   }
 });
 
-router.get("/users/:id", async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).send({ error: "User not found" });
-    }
-    res.send(user);
-  } catch (error) {
-    if (error.name === "CastError")
-      return res.status(404).send({ error: "User not found" });
-    res.status(500).send({ error: "Internal server error" });
-  }
-});
-
-router.patch("/users/:id", async (req, res) => {
+router.patch("/users/me", auth, async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ["email", "password"];
   const invalidUpdates = updates.filter(
@@ -107,17 +93,12 @@ router.patch("/users/:id", async (req, res) => {
       .send({ error: `Invalid updates, cannot update: ${invalidUpdates}` });
 
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).send({ error: "User not found" });
+    updates.forEach((update) => (req.user[update] = req.body[update]));
+    await req.user.save();
 
-    updates.forEach((update) => (user[update] = req.body[update]));
-    await user.save();
-
-    res.send(user);
+    res.send(req.user);
   } catch (error) {
-    if (error.name === "CastError")
-      return res.status(404).send({ error: "User not found" });
-    else if (error.name === "ValidationError") {
+    if (error.name === "ValidationError") {
       const errors = Object.keys(error.errors).map((field) => ({
         field: field,
         message: error.errors[field].message,
@@ -127,16 +108,12 @@ router.patch("/users/:id", async (req, res) => {
   }
 });
 
-router.delete("/users/:id", async (req, res) => {
+router.delete("/users/me", auth, async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) res.status(404).send({ error: "User not found" });
-    res.send(user);
+    await req.user.deleteOne();
+    res.send(req.user);
   } catch (error) {
-    console.log(error);
-    if (error.name === "CastError")
-      return res.status(404).send({ error: "User not found" });
-    else res.status(500).send({ error: "Internal server error" });
+    res.status(500).send({ error: "Internal server error" });
   }
 });
 
