@@ -4,6 +4,7 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
+// Signup
 router.post("/users", async (req, res) => {
   try {
     if (await User.findOne({ email: req.body.email })) {
@@ -27,6 +28,7 @@ router.post("/users", async (req, res) => {
   }
 });
 
+// Login
 router.post("/users/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -49,6 +51,32 @@ router.get("/users/me", auth, async (req, res) => {
     res.send(req.user);
   } catch (error) {
     res.status(500).send({ error: "Internal server error" });
+  }
+});
+
+// Logout
+router.post("/users/logout", auth, async (req, res) => {
+  try {
+    req.user.tokens = req.user.tokens.filter(
+      (tokenObj) => tokenObj.token !== req.token
+    );
+    await req.user.save();
+
+    res.send({ message: "Logout successful" });
+  } catch (error) {
+    res.status(500).send({ error: "Internal server error" });
+  }
+});
+
+// Logout from all sessions
+router.post("/users/logoutAll", auth, async (req, res) => {
+  try {
+    req.user.tokens = [];
+    await req.user.save();
+
+    res.send({ message: "Logged out from all devices" });
+  } catch (error) {
+    res.status(500).send("Internal server error");
   }
 });
 
