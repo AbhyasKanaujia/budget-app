@@ -12,7 +12,6 @@ router.post("/users", async (req, res) => {
         .send({ error: "An account with given email ID already exists" });
     }
     const user = new User(req.body);
-    await user.save();
     const token = user.generateAuthToken();
     res.status(201).send({ user, token });
   } catch (error) {

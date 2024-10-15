@@ -54,6 +54,7 @@ userSchema.methods.generateAuthToken = function () {
   });
 
   user.tokens.push({ token });
+  user.save();
   return token;
 };
 
