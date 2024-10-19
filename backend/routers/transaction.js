@@ -23,6 +23,7 @@ router.post("/transactions", auth, async (req, res) => {
 });
 
 // GET /transactions?transactionType=income/expense
+// GET /transactions?limit=10&skip=5
 router.get("/transactions", auth, async (req, res) => {
   const match = {};
   const transactionType = req.query.transactionType;
@@ -38,10 +39,15 @@ router.get("/transactions", auth, async (req, res) => {
     await req.user.populate({
       path: "transactions",
       match,
+      options: {
+        limit: parseInt(req.query.limit),
+        skip: parseInt(req.query.skip),
+      },
     });
     console.log(req.user.transactions);
     res.send(req.user.transactions);
   } catch (error) {
+    console.log(error);
     res.status(500).send({ error: "Internal server error" });
   }
 });
@@ -116,7 +122,7 @@ router.delete("/transactions/:id", auth, async (req, res) => {
       return res.status(404).send({ error: "Transaction not found" });
     res.send(transaction);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     if (error.name === "CastError")
       res.status(404).send({ error: "Transaction not found" });
     else res.status(500).send({ error: "Internal server error" });
