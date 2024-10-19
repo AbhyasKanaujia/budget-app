@@ -18,13 +18,19 @@ const Transaction = mongoose.model("Transaction", {
     type: String,
     enum: {
       values: ["income", "expense"],
-      message: "{VALUE} is not a valid transactionType, please select income or expense",
+      message:
+        "{VALUE} is not a valid transactionType, please select income or expense",
     },
     default: "expense",
   },
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  owner: {
+    type: mongoose.Schema.ObjectId,
+    required: true,
+    ref: "User",
   },
 });
 
