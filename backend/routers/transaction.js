@@ -24,9 +24,12 @@ router.post("/transactions", auth, async (req, res) => {
 
 // GET /transactions?transactionType=income/expense
 // GET /transactions?limit=10&skip=5
+// GET /transactions?sortBy=createdAt:asc/desc
 router.get("/transactions", auth, async (req, res) => {
   const match = {};
+  const sort = {};
   const transactionType = req.query.transactionType;
+  const sortBy = req.query.sortBy;
   if (transactionType) {
     if (["income", "expense"].includes(transactionType))
       match.transactionType = req.query.transactionType;
@@ -35,6 +38,10 @@ router.get("/transactions", auth, async (req, res) => {
         error: `Invalid transaction type "${transactionType}" provided in the query string. Valid options are "income" or "expense". Please adjust your request and try again.`,
       });
   }
+  if (sortBy) {
+    const parts = sortBy.split(":");
+    sort[parts[0]] = parts[1] === "asc" ? 1 : -1;
+  }
   try {
     await req.user.populate({
       path: "transactions",
@@ -42,6 +49,7 @@ router.get("/transactions", auth, async (req, res) => {
       options: {
         limit: parseInt(req.query.limit),
         skip: parseInt(req.query.skip),
+        sort,
       },
     });
     console.log(req.user.transactions);
