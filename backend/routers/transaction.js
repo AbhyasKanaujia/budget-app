@@ -22,9 +22,23 @@ router.post("/transactions", auth, async (req, res) => {
   }
 });
 
+// GET /transactions?transactionType=income/expense
 router.get("/transactions", auth, async (req, res) => {
+  const match = {};
+  const transactionType = req.query.transactionType;
+  if (transactionType) {
+    if (["income", "expense"].includes(transactionType))
+      match.transactionType = req.query.transactionType;
+    else
+      return res.status(400).send({
+        error: `Invalid transaction type "${transactionType}" provided in the query string. Valid options are "income" or "expense". Please adjust your request and try again.`,
+      });
+  }
   try {
-    await req.user.populate("transactions");
+    await req.user.populate({
+      path: "transactions",
+      match,
+    });
     console.log(req.user.transactions);
     res.send(req.user.transactions);
   } catch (error) {
@@ -94,7 +108,7 @@ router.patch("/transactions/:id", auth, async (req, res) => {
 
 router.delete("/transactions/:id", auth, async (req, res) => {
   try {
-    const transaction = await Transaction.findByOneAndDelete({
+    const transaction = await Transaction.findOneAndDelete({
       _id: req.params.id,
       owner: req.user._id,
     });
@@ -102,6 +116,7 @@ router.delete("/transactions/:id", auth, async (req, res) => {
       return res.status(404).send({ error: "Transaction not found" });
     res.send(transaction);
   } catch (error) {
+    console.log(error)
     if (error.name === "CastError")
       res.status(404).send({ error: "Transaction not found" });
     else res.status(500).send({ error: "Internal server error" });
