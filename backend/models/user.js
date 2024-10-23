@@ -27,6 +27,9 @@ const userSchema = mongoose.Schema(
         message: "Password cannot contain the word password",
       },
     },
+    avatar: {
+      type: Buffer,
+    },
     tokens: [
       {
         token: {
