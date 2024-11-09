@@ -3,6 +3,7 @@ const User = require("../models/user");
 const auth = require("../middleware/auth");
 const sharp = require("sharp");
 const multer = require("multer");
+const { sendWelcomeEmail, sendFarewellEmail } = require("../emails/accounts");
 
 const router = express.Router();
 
@@ -15,6 +16,9 @@ router.post("/users", async (req, res) => {
         .send({ error: "An account with given email ID already exists" });
     }
     const user = new User(req.body);
+
+    sendWelcomeEmail(user.email);
+
     const token = await user.generateAuthToken();
     res.status(201).send({ user, token });
   } catch (error) {
@@ -113,6 +117,9 @@ router.patch("/users/me", auth, async (req, res) => {
 router.delete("/users/me", auth, async (req, res) => {
   try {
     await req.user.deleteOne();
+
+    sendFarewellEmail(req.user.email);
+
     res.send(req.user);
   } catch (error) {
     res.status(500).send({ error: "Internal server error" });
